@@ -88,7 +88,7 @@ class Inventario:
     def mostrar_inventario(self) -> None:
         """Muestra todos los productos disponibles en el inventario."""
         if not self.__productos:
-            print("El inventario está vacío.")
+            print("El inventario está vacío. (El inventario empieza vacío. ¿Has intentado añadiendo algo en la opción 1 primero?")
         else:
             print("Inventario:")
             for producto in self.__productos:
