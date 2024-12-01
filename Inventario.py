@@ -1,7 +1,7 @@
 class Producto:
     """Clase que representa un producto en el inventario."""
 
-    def __init__(self, nombre: str, categoria: str, precio: float, cantidad: int):
+    def __init__(self, nombre: str, categoria: str, precio: float, cantidad: int) -> None:
         """Inicializa un producto con nombre, categoría, precio y cantidad."""
         self.__nombre = nombre
         self.__categoria = categoria
@@ -49,9 +49,9 @@ class Producto:
 class Inventario:
     """Clase que representa un inventario de productos."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Inicializa un inventario vacío."""
-        self.__productos = []
+        self.__productos: list[Producto] = []
 
     def agregar_producto(self, producto: Producto) -> None:
         """Agrega un nuevo producto al inventario si no existe previamente."""
@@ -62,35 +62,23 @@ class Inventario:
         self.__productos.append(producto)
         print(f"Producto '{producto.get_nombre()}' agregado exitosamente.")
 
-    def actualizar_producto(self, nombre: str, precio: float = None, cantidad: int = None) -> None:
-        """
-        Actualiza el precio o la cantidad de un producto existente.
-
-        Args:
-            nombre: Nombre del producto a actualizar.
-            precio: Nuevo precio (opcional).
-            cantidad: Nueva cantidad (opcional).
-        """
+    def actualizar_producto(
+        self, nombre: str, precio: float = None, cantidad: int = None
+    ) -> None:
+        """Actualiza el precio o la cantidad de un producto existente."""
         producto = self.buscar_producto(nombre)
         if not producto:
             raise ValueError(f"El producto '{nombre}' no existe en el inventario.")
 
-        try:
-            if precio is not None:
-                producto.set_precio(precio)
-            if cantidad is not None:
-                producto.set_cantidad(cantidad)
-            print(f"Producto '{nombre}' actualizado exitosamente.")
-        except ValueError as e:
-            print(f"Error al actualizar producto: {e}")
+        if precio is not None:
+            producto.set_precio(precio)
+        if cantidad is not None:
+            producto.set_cantidad(cantidad)
+
+        print(f"Producto '{nombre}' actualizado exitosamente.")
 
     def eliminar_producto(self, nombre: str) -> None:
-        """
-        Elimina un producto del inventario.
-
-        Args:
-            nombre: Nombre del producto a eliminar.
-        """
+        """Elimina un producto del inventario."""
         producto = self.buscar_producto(nombre)
         if not producto:
             raise ValueError(f"El producto '{nombre}' no existe en el inventario.")
@@ -107,68 +95,95 @@ class Inventario:
                 print(producto)
 
     def buscar_producto(self, nombre: str) -> Producto | None:
-        """
-        Busca un producto por su nombre.
-
-        Args:
-            nombre: Nombre del producto a buscar.
-
-        Returns:
-            Producto encontrado o None si no existe.
-        """
+        """Busca un producto por su nombre."""
         return next((p for p in self.__productos if p.get_nombre() == nombre), None)
 
 
-# Ejemplo de uso
-if __name__ == "__main__":
+def solicitar_datos_producto() -> Producto:
+    """Solicita datos del producto al usuario y los valida."""
+    nombre = input("Nombre del producto: ").strip()
+    categoria = input("Categoría del producto: ").strip()
+
+    while True:
+        precio_str = input("Precio del producto (mayor que 0): ").strip()
+        if not precio_str.replace('.', '', 1).isdigit():
+            print("Error: Ingresa un número válido para el precio.")
+            continue
+        precio = float(precio_str)
+        if precio <= 0:
+            print("Error: El precio debe ser mayor que 0.")
+            continue
+        break
+
+    while True:
+        cantidad_str = input("Cantidad en stock (mayor o igual a 0): ").strip()
+        if not cantidad_str.isdigit():
+            print("Error: Ingresa un número válido para la cantidad.")
+            continue
+        cantidad = int(cantidad_str)
+        if cantidad < 0:
+            print("Error: La cantidad debe ser mayor o igual que 0.")
+            continue
+        break
+
+    return Producto(nombre, categoria, precio, cantidad)
+
+
+def menu_interactivo() -> None:
+    """Menú interactivo para gestionar el inventario."""
     inventario = Inventario()
 
-    try:
-        # Crear 10 productos
-        productos = [
-            Producto("Laptop", "Electrónica", 1200.99, 10),
-            Producto("Mouse", "Accesorios", 25.50, 100),
-            Producto("Teclado", "Accesorios", 45.99, 50),
-            Producto("Monitor", "Electrónica", 300.00, 20),
-            Producto("Impresora", "Oficina", 150.00, 15),
-            Producto("Silla Gamer", "Muebles", 250.00, 5),
-            Producto("Cámara", "Fotografía", 800.00, 8),
-            Producto("Auriculares", "Audio", 60.00, 30),
-            Producto("Smartphone", "Electrónica", 900.00, 25),
-            Producto("Cargador", "Accesorios", 20.00, 150),
-        ]
+    opciones = {
+        "1": ("Agregar producto", lambda: inventario.agregar_producto(solicitar_datos_producto())),
+        "2": ("Actualizar producto", lambda: actualizar_producto_menu(inventario)),
+        "3": ("Eliminar producto", lambda: eliminar_producto_menu(inventario)),
+        "4": ("Mostrar inventario", inventario.mostrar_inventario),
+        "5": ("Buscar producto", lambda: buscar_producto_menu(inventario)),
+        "6": ("Salir", exit)
+    }
 
-        # Agregar productos al inventario
-        for producto in productos:
-            inventario.agregar_producto(producto)
+    while True:
+        print("\n--- Menú del Inventario ---")
+        for key, (desc, _) in opciones.items():
+            print(f"{key}. {desc}")
 
-        # Mostrar inventario inicial
-        print("\nInventario inicial:")
-        inventario.mostrar_inventario()
+        opcion = input("Selecciona una opción: ").strip()
+        if opcion in opciones:
+            try:
+                opciones[opcion][1]()
+            except ValueError as e:
+                print(f"Error: {e}")
+        else:
+            print("Opción no válida. Intenta de nuevo.")
 
-        # Actualizar algunos productos
-        print("\nActualizando productos...")
-        inventario.actualizar_producto("Mouse", cantidad=95)
-        inventario.actualizar_producto("Monitor", precio=280.00)
-        inventario.actualizar_producto("Cargador", cantidad=160, precio=18.00)
 
-        # Buscar un producto específico
-        print("\nBuscando producto 'Auriculares':")
-        producto = inventario.buscar_producto("Auriculares")
-        if producto:
-            print("Producto encontrado:", producto)
+def actualizar_producto_menu(inventario: Inventario) -> None:
+    """Solicita datos para actualizar un producto."""
+    nombre = input("Nombre del producto a actualizar: ").strip()
+    precio_str = input("Nuevo precio (deja vacío para no cambiarlo): ").strip()
+    cantidad_str = input("Nueva cantidad (deja vacío para no cambiarla): ").strip()
 
-        # Eliminar algunos productos
-        print("\nEliminando productos...")
-        inventario.eliminar_producto("Laptop")
-        inventario.eliminar_producto("Silla Gamer")
+    precio = float(precio_str) if precio_str and precio_str.replace('.', '', 1).isdigit() else None
+    cantidad = int(cantidad_str) if cantidad_str and cantidad_str.isdigit() else None
 
-        # Mostrar inventario final
-        print("\nInventario final:")
-        inventario.mostrar_inventario()
+    inventario.actualizar_producto(nombre, precio, cantidad)
 
-    except ValueError as e:
-        print("Error:", e)
 
-    # Esperar a que el usuario presione una tecla antes de salir
-    input("\nPresiona cualquier tecla para salir...")
+def eliminar_producto_menu(inventario: Inventario) -> None:
+    """Solicita el nombre del producto a eliminar."""
+    nombre = input("Nombre del producto a eliminar: ").strip()
+    inventario.eliminar_producto(nombre)
+
+
+def buscar_producto_menu(inventario: Inventario) -> None:
+    """Solicita el nombre del producto a buscar."""
+    nombre = input("Nombre del producto a buscar: ").strip()
+    producto = inventario.buscar_producto(nombre)
+    if producto:
+        print("Producto encontrado:", producto)
+    else:
+        print(f"El producto '{nombre}' no se encuentra en el inventario.")
+
+
+if __name__ == "__main__":
+    menu_interactivo()
